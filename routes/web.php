@@ -15,4 +15,5 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-$router->get('/register', 'RegistrationController@giroRegister');
+$router->get('/check-giro', 'RegistrationController@giroCheck');
+$router->post('/account-register', 'RegistrationController@accountRegister');
