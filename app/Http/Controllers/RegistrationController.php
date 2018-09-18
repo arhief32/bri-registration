@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\ResponseCode;
+use Carbon\Carbon;
 
 class RegistrationController extends Controller
 {
@@ -14,6 +15,21 @@ class RegistrationController extends Controller
     public function __construct()
     {
         //
+    }
+
+    public function generateRegistrationNumber()
+    {
+        $str = "";
+        $chars = "01234567890123456789012345678901234567890123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";	
+
+        $length = 12;
+        $size = strlen($chars);
+        for($i=0; $i<$length; $i++) 
+        {
+	    	$str .= $chars[rand(0, $size-1)];
+	    }
+
+	    return $str;
     }
 
     function removeNamespaceFromXML($xml)
@@ -32,9 +48,13 @@ class RegistrationController extends Controller
         return $xml;
     }
 
-    public function giroRegister(Request $request)
+    public function giroCheck(Request $request)
     {
-        $account_number = $request->accountNo;
+        $this->validate($request, [
+            'account_number' => 'required',
+        ]);
+    
+        $account_number = $request->account_number;
 
         $client = new \GuzzleHttp\Client();
         $getInquiry = $client->request('GET', '10.35.65.152:9099/Service.asmx/InquiryAccount?accountNo='.$account_number)->getBody();
@@ -52,6 +72,32 @@ class RegistrationController extends Controller
 
     public function accountRegister(Request $request)
     {
-        
+        $this->validate($request, [
+            'corporate_code' => 'required',
+            'nama_company' => 'required',
+            'nama' => 'required',
+            'telepon' => 'required',
+            'email' => 'required',
+        ]);
+
+        $nomor_registrasi = $this->generateRegistrationNumber();
+        $corporate_code = $request->corporate_code;
+        $nama_company = $request->nama_company;
+        $nama = $request->nama;
+        $telepon = $request->telepon;
+        $email = $request->email;
+        // $nomor_rekening = $request->nomor_rekening;
+        // $nama_rekening = $request->nama_rekening;
+        $tanggal_registrasi = Carbon::now('Asia/jakarta')->toDateTimeString();
+
+        return response()->json([
+            'nomor_registrasi' => $nomor_registrasi,
+            'corporate_code' => $corporate_code,
+            'nama_company' => $nama_company,
+            'nama' => $nama,
+            'telepon' => $telepon,
+            'email' => $email,
+            'tanggal_registrasi' => $tanggal_registrasi,
+        ]);
     }
 }
