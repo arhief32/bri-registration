@@ -22,4 +22,20 @@ class ResponseCode extends Model
             'detail' => $request,
         ]);
     }
+
+    public static function successInsertData()
+    {
+        return response()->json([
+            'status' => '00',
+            'message' => 'Your data was inserted into platform',
+        ]);
+    }
+
+    public static function failedInsertData()
+    {
+        return response()->json([
+            'status' => '01',
+            'message' => 'Your data is not inserted because data is not valid or not completed',
+        ]);
+    }
 }
