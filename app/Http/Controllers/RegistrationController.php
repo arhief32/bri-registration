@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\ResponseCode;
 use Carbon\Carbon;
 
@@ -78,6 +79,9 @@ class RegistrationController extends Controller
             'nama' => 'required',
             'telepon' => 'required',
             'email' => 'required',
+            'nomor_rekening' => 'required',
+            'nama_rekening' => 'required',
+
         ]);
 
         $nomor_registrasi = $this->generateRegistrationNumber();
@@ -86,18 +90,29 @@ class RegistrationController extends Controller
         $nama = $request->nama;
         $telepon = $request->telepon;
         $email = $request->email;
-        // $nomor_rekening = $request->nomor_rekening;
-        // $nama_rekening = $request->nama_rekening;
+        $nomor_rekening = $request->nomor_rekening;
+        $nama_rekening = $request->nama_rekening;
         $tanggal_registrasi = Carbon::now('Asia/jakarta')->toDateTimeString();
 
-        return response()->json([
+        $insert_data = DB::table('registrasi')->insert([
             'nomor_registrasi' => $nomor_registrasi,
             'corporate_code' => $corporate_code,
             'nama_company' => $nama_company,
             'nama' => $nama,
             'telepon' => $telepon,
             'email' => $email,
-            'tanggal_registrasi' => $tanggal_registrasi,
+            'nomor_rekening' => $nomor_rekening,
+            'nama_rekening' => $nama_rekening,
+            'tgl_registrasi' => $tanggal_registrasi
         ]);
+
+        if($insert_data == true)
+        {
+            return ResponseCode::successInsertData();
+        }
+        else
+        {
+            return ResponseCode::failedInsertData();
+        }
     }
 }
