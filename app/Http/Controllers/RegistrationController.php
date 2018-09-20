@@ -13,9 +13,15 @@ class RegistrationController extends Controller
      *
      * @return void
      */
-    public function __construct()
+    
+    public function selectCorporate($corporate_code)
     {
-        //
+        config(['database.default' => 'paygate']);
+        $result = DB::table('mappings')->select('*')
+        ->where('corp_code', $corporate_code)
+        ->first();
+
+        return $result;
     }
 
     public function generateRegistrationNumber()
@@ -58,7 +64,7 @@ class RegistrationController extends Controller
         $account_number = $request->account_number;
 
         $client = new \GuzzleHttp\Client();
-        $getInquiry = $client->request('GET', '10.35.65.152:9099/Service.asmx/InquiryAccount?accountNo='.$account_number)->getBody();
+        $getInquiry = $client->request('GET', env('BRIVA_SERVICE_URL').'/InquiryAccount?accountNo='.$account_number)->getBody();
         $inquiry = json_decode(json_encode(simplexml_load_string($this->removeNamespaceFromXML($getInquiry))), true);
 
         if($inquiry['accountStatus'] !== '0001')
@@ -114,5 +120,47 @@ class RegistrationController extends Controller
         {
             return ResponseCode::failedInsertData();
         }
+    }
+
+    public function platformRegister(Request $request)
+    {
+        $corporate_code = $request->corporate_code;
+        $nama_company = $request->nama_company;
+        $nama = $request->nama;
+        $telepon = $request->telepon;
+        $email = $request->email;
+        $nomor_rekening = $request->nomor_rekening;
+        $nama_rekening = $request->nama_rekening;
+
+        $platform_environment = $this->selectCorporate($corporate_code);
+
+        $client = new \GuzzleHttp\Client;
+        $postRegistration = $client->post($platform_environment->corp_url.'registration-company', [
+            \GuzzleHttp\RequestOptions::JSON => [
+                'nomor_rekening' => (string) $request->nomor_rekening,
+                'nama_rekening' => (string) $request->nama_rekening,
+                'nama' => (string) $request->nama,
+                'telepon' => (string) $request->telepon,
+                'email' => (string) $request->email,
+                'nama_company' => (string) $request->nama_company,
+                'corporate_code' => (string) $request->corporate_code,
+            ]
+        ])->getBody();
+        $registration = json_decode($postRegistration);
+
+        $postInsertBrivaCo = $client->post(env('BRIVA_SERVICE_URL').'/InsertBrivaCo', [
+            'headers' => [
+                'Content-Type' => 'application/x-www-form-urlencoded'
+            ],
+            'form_params' => [
+                'corpCode' => (string)$corporate_code,
+                'uniqueCode' => (string)$registration->message->corporate_code,
+                'accountNo' => (string)$nomor_rekening,
+                'description' => (string)$nama_company,
+            ]
+        ])->getBody();
+        $insertBrivaCo = json_decode(json_encode(simplexml_load_string($this->removeNamespaceFromXML($postInsertBrivaCo))), true);;
+        
+        return response()->json($insertBrivaCo);
     }
 }
