@@ -17,3 +17,6 @@ $router->get('/', function () use ($router) {
 
 $router->get('/check-giro', 'RegistrationController@giroCheck');
 $router->post('/account-register', 'RegistrationController@accountRegister');
+$router->post('/platform-register', 'RegistrationController@platformRegister');
+
+$router->get('/example', 'RegistrationController@example');
